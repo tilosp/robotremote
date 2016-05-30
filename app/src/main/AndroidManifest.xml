@@ -1,7 +1,10 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
-          xmlns:tools="http://schemas.android.com/tools" package="de.tilosp.robotremote">
+          xmlns:tools="http://schemas.android.com/tools"
+          package="de.tilosp.robotremote">
 
+    <uses-permission android:name="android.permission.BLUETOOTH"/>
+    <uses-permission android:name="android.permission.BLUETOOTH_ADMIN"/>
     <application
             android:allowBackup="true"
             android:icon="@mipmap/ic_launcher"
@@ -21,7 +24,13 @@
         <activity
                 android:name=".SettingsActivity"
                 android:label="@string/activity_settings"
-                android:parentActivityName=".MainActivity" tools:ignore="UnusedAttribute">
+                android:parentActivityName=".MainActivity"
+                tools:ignore="UnusedAttribute">
+        </activity>
+        <activity
+                android:name=".DeviceListActivity"
+                android:label="@string/activity_device_list"
+                android:theme="@style/AppTheme.Dialog">
         </activity>
     </application>
 
