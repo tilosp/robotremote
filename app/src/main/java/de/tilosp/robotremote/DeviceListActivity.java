@@ -121,7 +121,7 @@ public class DeviceListActivity extends AppCompatActivity {
     private AdapterView.OnItemClickListener mDeviceClickListener = new AdapterView.OnItemClickListener() {
         public void onItemClick(AdapterView<?> av, View v, int arg2, long arg3) {
             String info = ((TextView) v).getText().toString();
-            if (getText(R.string.none_found).toString().equals(info))
+            if (getText(R.string.none_found).toString().equals(info) || getText(R.string.none_paired).toString().equals(info))
                 return;
 
             // Get the device MAC address, which is the last 17 chars in the View
