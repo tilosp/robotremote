@@ -88,7 +88,6 @@ public class DeviceListActivity extends AppCompatActivity {
 
         // If there are paired devices, add each one to the ArrayAdapter
         if (pairedDevices.size() > 0) {
-            findViewById(R.id.title_paired_devices).setVisibility(View.VISIBLE);
             for (BluetoothDevice device : pairedDevices)
                 pairedDevicesArrayAdapter.add(device.getName() + "\n" + device.getAddress());
         } else {
