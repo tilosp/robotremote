@@ -9,7 +9,6 @@ import android.content.Intent;
 import android.content.IntentFilter;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
-import android.util.Log;
 import android.view.View;
 import android.widget.*;
 
@@ -20,6 +19,8 @@ public class DeviceListActivity extends AppCompatActivity {
     public static String EXTRA_DEVICE_ADDRESS = "device_address";
 
     private BluetoothAdapter bluetoothAdapter;
+
+    private LinearLayout newDevicesListView;
 
     @Override
     protected void onDestroy() {
@@ -32,8 +33,6 @@ public class DeviceListActivity extends AppCompatActivity {
         // Unregister broadcast listeners
         unregisterReceiver(broadcastReceiver);
     }
-
-    private ArrayAdapter<String> newDevicesArrayAdapter;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -59,20 +58,11 @@ public class DeviceListActivity extends AppCompatActivity {
             }
         });
 
-        // Initialize array adapters. One for already paired devices and
-        // one for newly discovered devices
-        ArrayAdapter<String> pairedDevicesArrayAdapter = new ArrayAdapter<>(this, R.layout.device_name);
-        newDevicesArrayAdapter = new ArrayAdapter<>(this, R.layout.device_name);
-
         // Find and set up the ListView for paired devices
-        ListView pairedListView = (ListView) findViewById(R.id.paired_devices);
-        pairedListView.setAdapter(pairedDevicesArrayAdapter);
-        pairedListView.setOnItemClickListener(mDeviceClickListener);
+        LinearLayout pairedListView = (LinearLayout) findViewById(R.id.paired_devices);
 
         // Find and set up the ListView for newly discovered devices
-        ListView newDevicesListView = (ListView) findViewById(R.id.new_devices);
-        newDevicesListView.setAdapter(newDevicesArrayAdapter);
-        newDevicesListView.setOnItemClickListener(mDeviceClickListener);
+        newDevicesListView = (LinearLayout) findViewById(R.id.new_devices);
 
         // Register for broadcasts when a device is discovered
         registerReceiver(broadcastReceiver, new IntentFilter(BluetoothDevice.ACTION_FOUND));
@@ -88,11 +78,17 @@ public class DeviceListActivity extends AppCompatActivity {
 
         // If there are paired devices, add each one to the ArrayAdapter
         if (pairedDevices.size() > 0) {
-            for (BluetoothDevice device : pairedDevices)
-                pairedDevicesArrayAdapter.add(device.getName() + "\n" + device.getAddress());
+            for (BluetoothDevice device : pairedDevices) {
+                Button vi = (Button) getLayoutInflater().inflate(R.layout.device_name, null);
+                vi.setText(device.getName() + "\n" + device.getAddress());
+                vi.setOnClickListener(onClickListener);
+                pairedListView.addView(vi);
+            }
         } else {
-            String noDevices = getResources().getText(R.string.none_paired).toString();
-            pairedDevicesArrayAdapter.add(noDevices);
+            Button vi = (Button) getLayoutInflater().inflate(R.layout.device_name, null);
+            vi.setText(R.string.none_paired);
+            vi.setClickable(false);
+            pairedListView.addView(vi);
         }
     }
 
@@ -118,13 +114,13 @@ public class DeviceListActivity extends AppCompatActivity {
     /**
      * The on-click listener for all devices in the ListViews
      */
-    private AdapterView.OnItemClickListener mDeviceClickListener = new AdapterView.OnItemClickListener() {
-        public void onItemClick(AdapterView<?> av, View v, int arg2, long arg3) {
-            String info = ((TextView) v).getText().toString();
-            if (getText(R.string.none_found).toString().equals(info) || getText(R.string.none_paired).toString().equals(info))
-                return;
+    private View.OnClickListener onClickListener = new View.OnClickListener() {
+
+        @Override
+        public void onClick(View v) {
 
             // Get the device MAC address, which is the last 17 chars in the View
+            String info = ((TextView) v).getText().toString();
             String address = info.substring(info.length() - 17);
 
             // Create the result Intent and include the MAC address
@@ -151,13 +147,19 @@ public class DeviceListActivity extends AppCompatActivity {
                 // Get the BluetoothDevice object from the Intent
                 BluetoothDevice device = intent.getParcelableExtra(BluetoothDevice.EXTRA_DEVICE);
                 // If it's already paired, skip it, because it's been listed already
-                if (device.getBondState() != BluetoothDevice.BOND_BONDED)
-                    newDevicesArrayAdapter.add(device.getName() + "\n" + device.getAddress());
-                // When discovery is finished, change the Activity title
+                if (device.getBondState() != BluetoothDevice.BOND_BONDED) {
+                    Button vi = (Button) getLayoutInflater().inflate(R.layout.device_name, null);
+                    vi.setText(device.getName() + "\n" + device.getAddress());
+                    vi.setOnClickListener(onClickListener);
+                    newDevicesListView.addView(vi);
+                }
+                    //newDevicesArrayAdapter.add(device.getName() + "\n" + device.getAddress());
             } else if (action.equals(BluetoothAdapter.ACTION_DISCOVERY_FINISHED)) {
-                if (newDevicesArrayAdapter.getCount() == 0) {
-                    String noDevices = getResources().getText(R.string.none_found).toString();
-                    newDevicesArrayAdapter.add(noDevices);
+                if (newDevicesListView.getChildCount() == 0) {
+                    Button vi = (Button) getLayoutInflater().inflate(R.layout.device_name, null);
+                    vi.setText(R.string.none_found);
+                    vi.setClickable(false);
+                    newDevicesListView.addView(vi);
                 }
             }
         }
