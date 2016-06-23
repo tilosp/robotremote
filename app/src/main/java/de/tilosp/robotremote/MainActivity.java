@@ -147,7 +147,7 @@ public class MainActivity extends AppCompatActivity {
         public CharSequence getPageTitle(int position) {
             switch (position) {
                 case 0:
-                    return "SECTION 1";
+                    return getString(R.string.tab_calibration);
                 case 1:
                     return "SECTION 2";
                 case 2:
