@@ -13,4 +13,9 @@
     <string name="none_paired">No devices have been paired</string>
     <string name="none_found">No devices found</string>
     <string name="tab_calibration">Calibration</string>
+    <string name="tab_control">Control</string>
+    <string name="button_forward">Forward</string>
+    <string name="button_left">Left</string>
+    <string name="button_right">Right</string>
+    <string name="button_backwards">Backwards</string>
 </resources>
