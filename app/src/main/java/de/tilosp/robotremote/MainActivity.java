@@ -1,6 +1,10 @@
 package de.tilosp.robotremote;
 
+import android.app.Activity;
+import android.bluetooth.BluetoothAdapter;
 import android.content.Intent;
+import android.os.Handler;
+import android.os.Message;
 import android.support.design.widget.TabLayout;
 import android.support.design.widget.FloatingActionButton;
 import android.support.design.widget.Snackbar;
@@ -12,6 +16,7 @@ import android.support.v4.app.FragmentManager;
 import android.support.v4.app.FragmentPagerAdapter;
 import android.support.v4.view.ViewPager;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuItem;
@@ -19,10 +24,28 @@ import android.view.View;
 import android.view.ViewGroup;
 
 import android.widget.TextView;
+import android.widget.Toast;
 
 public class MainActivity extends AppCompatActivity {
 
+    private static final int REQUEST_ENABLE_BT = 1;
     private static final int REQUEST_CONNECT = 2;
+
+
+    public static final int MESSAGE_STATE_CHANGE = 1;
+    public static final int MESSAGE_READ = 2;
+    public static final int MESSAGE_DEVICE_NAME = 3;
+    public static final int MESSAGE_CONNECTION_FAILED = 4;
+    public static final int MESSAGE_CONNECTION_LOST = 5;
+
+    public static final String DEVICE_NAME = "device_name";
+
+    private BluetoothAdapter bluetoothAdapter = null;
+    private BluetoothService bluetoothService = null;
+    private final Handler handler = new MessageHandler();
+
+    protected int calibrateLeft;
+    protected int calibrateRight;
 
     /**
      * The {@link android.support.v4.view.PagerAdapter} that will provide
@@ -57,6 +80,28 @@ public class MainActivity extends AppCompatActivity {
         TabLayout tabLayout = (TabLayout) findViewById(R.id.tabs);
         tabLayout.setupWithViewPager(mViewPager);
 
+        bluetoothAdapter = BluetoothAdapter.getDefaultAdapter();
+        if (bluetoothAdapter == null)
+            finish();
+
+    }
+
+    @Override
+    public void onDestroy() {
+        super.onDestroy();
+        if (bluetoothService != null)
+            bluetoothService.stop();
+    }
+
+    protected void updateServo(int left, int right) {
+        left = 90 + calibrateLeft + left;
+        right = 90 + calibrateRight + right;
+        left = Math.min(left, 180);
+        left = Math.max(left, 0);
+        right = Math.min(right, 180);
+        right = Math.max(right, 0);
+        Log.i("servo", left + " " + right);
+        bluetoothService.write(new byte[] { (byte) 200, (byte) left, (byte) 201, (byte) right });
     }
 
 
@@ -83,6 +128,26 @@ public class MainActivity extends AppCompatActivity {
         }
 
         return super.onOptionsItemSelected(item);
+    }
+
+    @Override
+    public void onStart() {
+        super.onStart();
+
+        if (!bluetoothAdapter.isEnabled()) {
+            startActivityForResult(new Intent(BluetoothAdapter.ACTION_REQUEST_ENABLE), REQUEST_ENABLE_BT);
+        } else if (bluetoothService == null) {
+            bluetoothService = new BluetoothService(handler);
+        }
+    }
+
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+        super.onActivityResult(requestCode, resultCode, data);
+        if (requestCode == REQUEST_ENABLE_BT && resultCode == Activity.RESULT_CANCELED)
+            finish();
+        else if (requestCode == REQUEST_CONNECT && resultCode == Activity.RESULT_OK)
+            bluetoothService.connect(bluetoothAdapter.getRemoteDevice(data.getStringExtra(DeviceListActivity.EXTRA_DEVICE_ADDRESS)));
     }
 
     /**
@@ -121,6 +186,39 @@ public class MainActivity extends AppCompatActivity {
                     return getString(R.string.tab_control);
             }
             return null;
+        }
+    }
+
+    private class MessageHandler extends Handler {
+
+        @Override
+        public void handleMessage(Message msg) {
+            switch (msg.what) {
+                case MESSAGE_STATE_CHANGE:
+                    switch (msg.arg1) {
+                        case BluetoothService.STATE_CONNECTED:
+                            break;
+                        case BluetoothService.STATE_CONNECTING:
+                            break;
+                        case BluetoothService.STATE_NONE:
+                            break;
+                    }
+                    break;
+                case MESSAGE_READ:
+                    byte[] readBuf = (byte[]) msg.obj;
+                    // construct a string from the valid bytes in the buffer
+                    String readMessage = new String(readBuf, 0, msg.arg1);
+                    break;
+                case MESSAGE_DEVICE_NAME:
+                    Toast.makeText(MainActivity.this, String.format(getString(R.string.connected_to), msg.getData().getString(DEVICE_NAME)), Toast.LENGTH_SHORT).show();
+                    break;
+                case MESSAGE_CONNECTION_FAILED:
+                    Toast.makeText(MainActivity.this, getString(R.string.connection_failed), Toast.LENGTH_SHORT).show();
+                    break;
+                case MESSAGE_CONNECTION_LOST:
+                    Toast.makeText(MainActivity.this, getString(R.string.connection_lost), Toast.LENGTH_SHORT).show();
+                    break;
+            }
         }
     }
 }

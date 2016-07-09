@@ -18,4 +18,7 @@
     <string name="button_left">Left</string>
     <string name="button_right">Right</string>
     <string name="button_backwards">Backwards</string>
+    <string name="connected_to">Connected to %s</string>
+    <string name="connection_failed">Unable to connect device</string>
+    <string name="connection_lost">Device connection was lost</string>
 </resources>

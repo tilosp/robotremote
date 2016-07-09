@@ -16,7 +16,8 @@ tools:context="de.tilosp.robotremote.CalibrationFragment">
         android:layout_alignParentLeft="true"
         android:layout_alignParentStart="true"
         android:layout_marginLeft="60dp"
-        android:layout_marginStart="60dp" />
+        android:layout_marginStart="60dp"
+        android:descendantFocusability="blocksDescendants" />
 
     <NumberPicker
         android:layout_width="wrap_content"
@@ -26,5 +27,6 @@ tools:context="de.tilosp.robotremote.CalibrationFragment">
         android:layout_alignParentRight="true"
         android:layout_alignParentEnd="true"
         android:layout_marginRight="60dp"
-        android:layout_marginEnd="60dp" />
+        android:layout_marginEnd="60dp"
+        android:descendantFocusability="blocksDescendants" />
 </RelativeLayout>
